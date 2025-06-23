@@ -1,6 +1,6 @@
 # duat-sneak ![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue) [![duat-sneak on crates.io](https://img.shields.io/crates/v/duat-sneak)](https://crates.io/crates/duat-sneak) [![duat-sneak on docs.rs](https://docs.rs/duat-sneak/badge.svg)](https://docs.rs/duat-sneak) [![Source Code Repository](https://img.shields.io/badge/Code-On%20GitHub-blue?logo=GitHub)](https://github.com/AhoyISki/duat)
 
-![sneak demonstration](../assets/sneak-demonstration.gif)
+![sneak demonstration](./assets/sneak-demonstration.gif)
 
 A `duat` [`Mode`][__link0] for searching for character sequences
 
@@ -77,7 +77,7 @@ be filtered out, until there is only one label left, at which
 point it will be selected and you’ll return to the [default mode][__link8].
 
 
- [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG4IA0U4o2v_nG0nShNh9mFPVGzI2Nk_cFKuWG3RsDqMmIUI5YXKEG_AdYqFW4g15G5K3IbIxj4M2G2MegS_OKW5cG7oVnW-Xu69YYWSCgmlkdWF0X2NvcmVlMC41LjGCZG1vZGX2
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG7OnKS_PkemFG56IpJ_QmFWVGx-ENAHaG7xgG84zvdQl8TPsYXKEG_AdYqFW4g15G5K3IbIxj4M2G2MegS_OKW5cG7oVnW-Xu69YYWSCgmlkdWF0X2NvcmVlMC41LjGCZG1vZGX2
  [__link0]: https://docs.rs/duat_core/0.5.1/duat_core/?search=mode::Mode
  [__link1]: https://github.com/justinmk/vim-sneak
  [__link2]: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html
