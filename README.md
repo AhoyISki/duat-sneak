@@ -25,8 +25,13 @@ In order to make use of it, just add the following to your `setup`
 function:
 
 ```rust
+setup_duat!(setup);
+use duat::prelude::*;
 use sneak::*;
-map::<User>("s", Sneak::new());
+
+fn setup() {
+    map::<User>("s", Sneak::new());
+}
 ```
 
 In this mode, these are the available key sequences:
@@ -50,9 +55,7 @@ In this mode, these are the available key sequences:
 ## More Options
 
 ```rust
-fn setup() {
-    map::<User>("s", Sneak::new().select_keys(',', ';').with_len(3));
-}
+map::<User>("s", Sneak::new().select_keys(',', ';').with_len(3));
 ```
 
 Instead of switching with the regular keys, `;` selects the
@@ -65,9 +68,7 @@ If there are too many matches, switching to a far away match could
 be tedious, so you can do the following instead:
 
 ```rust
-fn setup() {
-    map::<User>("s", Sneak::new().min_for_labels(8));
-}
+map::<User>("s", Sneak::new().min_for_labels(8));
 ```
 
 Now, if there are 8 or more matches, instead of switching to them
@@ -77,7 +78,7 @@ be filtered out, until there is only one label left, at which
 point it will be selected and you’ll return to the [default mode][__link8].
 
 
- [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG7OnKS_PkemFG56IpJ_QmFWVGx-ENAHaG7xgG84zvdQl8TPsYXKEG_AdYqFW4g15G5K3IbIxj4M2G2MegS_OKW5cG7oVnW-Xu69YYWSCgmlkdWF0X2NvcmVlMC41LjGCZG1vZGX2
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG7OnKS_PkemFG56IpJ_QmFWVGx-ENAHaG7xgG84zvdQl8TPsYXKEG6wzS4SadA4yG2p7GwZcja_EG1t__eaxyVcaG5LUJ4VUfU_NYWSCgmlkdWF0X2NvcmVlMC41LjGCZG1vZGX2
  [__link0]: https://docs.rs/duat_core/0.5.1/duat_core/?search=mode::Mode
  [__link1]: https://github.com/justinmk/vim-sneak
  [__link2]: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html

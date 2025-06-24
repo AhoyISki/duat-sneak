@@ -21,10 +21,15 @@
 //! function:
 //!
 //! ```rust
+//! # use duat_core::doc_duat as duat;
 //! # use duat_sneak as sneak;
-//! # fn map<M>(keys: &'static str, mode: impl std::any::Any) {}
+//! setup_duat!(setup);
+//! use duat::prelude::*;
 //! use sneak::*;
-//! map::<User>("s", Sneak::new());
+//!
+//! fn setup() {
+//!     map::<User>("s", Sneak::new());
+//! }
 //! ```
 //!
 //! In this mode, these are the available key sequences:
@@ -49,12 +54,12 @@
 //! # More Options
 //!
 //! ```rust
-//! # use duat_sneak::Sneak;
-//! # use duat_core::mode::User;
-//! # fn map<M>(keys: &'static str, mode: impl std::any::Any) {}
-//! fn setup() {
-//!     map::<User>("s", Sneak::new().select_keys(',', ';').with_len(3));
-//! }
+//! # setup_duat!(setup);
+//! # use duat_core::doc_duat::prelude::*;
+//! # use duat_sneak::*;
+//! # fn setup() {
+//! map::<User>("s", Sneak::new().select_keys(',', ';').with_len(3));
+//! # }
 //! ```
 //!
 //! Instead of switching with the regular keys, `;` selects the
@@ -67,12 +72,12 @@
 //! be tedious, so you can do the following instead:
 //!
 //! ```rust
-//! # use duat_sneak::Sneak;
-//! # use duat_core::mode::User;
-//! # fn map<M>(keys: &'static str, mode: impl std::any::Any) {}
-//! fn setup() {
-//!     map::<User>("s", Sneak::new().min_for_labels(8));
-//! }
+//! # setup_duat!(setup);
+//! # use duat_core::doc_duat::prelude::*;
+//! # use duat_sneak::*;
+//! # fn setup() {
+//! map::<User>("s", Sneak::new().min_for_labels(8));
+//! # }
 //! ```
 //!
 //! Now, if there are 8 or more matches, instead of switching to them
@@ -88,7 +93,7 @@
 //! [default mode]: mode::reset
 use std::sync::{LazyLock, Mutex};
 
-use duat_core::{prelude::*, text::Point, mode::Mode};
+use duat_core::{mode::Mode, prelude::*, text::Point};
 
 static TAGGER: LazyLock<Tagger> = Tagger::new_static();
 static CUR_TAGGER: LazyLock<Tagger> = Tagger::new_static();
