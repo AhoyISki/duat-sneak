@@ -6,13 +6,11 @@
 //!
 //! # Installation
 //!
-//! Just like other plugins, this one can be installed by adding the
-//! following to your [`Cargo.toml`'s `dependencies` section]:
+//! Just like other Duat plugins, this one can be installed by calling
+//! `cargo add` in the config directory:
 //!
-//! ```toml
-//! [dependencies.sneak]
-//! version = "*"
-//! package = "duat-sneak"
+//! ```bash
+//! cargo add duat-sneak@"*" --rename sneak
 //! ```
 //!
 //! # Usage
