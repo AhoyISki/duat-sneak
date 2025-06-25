@@ -186,10 +186,6 @@ impl Sneak {
 }
 
 impl<U: Ui> Plugin<U> for Sneak {
-    fn new() -> Self {
-        Self::new()
-    }
-
     fn plug(self) {
         mode::map::<mode::User, U>("s", self);
     }
@@ -333,7 +329,7 @@ impl<U: Ui> Mode<U> for Sneak {
 
                     mode::reset::<File<U>, U>();
                 } else {
-                    hi_labels(pa, &handle, &matches);
+                    hi_labels(pa, &handle, matches);
                 }
             }
         }
