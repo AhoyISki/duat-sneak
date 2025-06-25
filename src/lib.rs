@@ -28,11 +28,26 @@
 //! use sneak::*;
 //!
 //! fn setup() {
+//!     plug!(Sneak::new());
+//! }
+//! ```
+//!
+//! With the above call, you will map the `s` key in [`User`] [`Mode`]
+//! to the [`Sneak`] mode, you can also do that manually:
+//!
+//! ```rust
+//! # use duat_core::doc_duat as duat;
+//! # use duat_sneak as sneak;
+//! setup_duat!(setup);
+//! use duat::prelude::*;
+//! use sneak::*;
+//!
+//! fn setup() {
 //!     map::<User>("s", Sneak::new());
 //! }
 //! ```
 //!
-//! In this mode, these are the available key sequences:
+//! In the [`Sneak`] mode, these are the available key sequences:
 //!
 //! - `{char0}{char1}`: Highlight any instance of the string
 //!   `{char0}{char1}` on screen. If there is only one instance, it
@@ -52,6 +67,9 @@
 //!   [default mode].
 //!
 //! # More Options
+//!
+//! Note that you can use all of these options when pluggin the mode
+//! as well.
 //!
 //! ```rust
 //! # setup_duat!(setup);
@@ -167,6 +185,16 @@ impl Sneak {
     }
 }
 
+impl<U: Ui> Plugin<U> for Sneak {
+    fn new() -> Self {
+        Self::new()
+    }
+
+    fn plug(self) {
+        mode::map::<mode::User, U>("s", self);
+    }
+}
+
 impl<U: Ui> Mode<U> for Sneak {
     type Widget = File<U>;
 
@@ -180,7 +208,7 @@ impl<U: Ui> Mode<U> for Sneak {
                 } else {
                     let last = LAST.lock().unwrap();
 
-                    if *last == "" {
+                    if last.is_empty() {
                         context::error!("mode hasn't been set to [a]Sneak[] yet");
                         mode::reset::<File<U>, U>();
                         return;
