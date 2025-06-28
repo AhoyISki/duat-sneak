@@ -366,12 +366,6 @@ fn hi_labels<U: Ui>(pa: &mut Pass, handle: &Handle<File<U>, U>, matches: &Vec<[P
     });
 }
 
-impl Default for Sneak {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 fn hi_matches<U: Ui>(
     pa: &mut Pass,
     pat: &str,
@@ -434,4 +428,10 @@ enum Step {
     Filter(String),
     MatchedMove(String, Vec<[Point; 2]>, usize),
     MatchedLabels(String, Vec<[Point; 2]>),
+}
+
+impl Default for Sneak {
+    fn default() -> Self {
+        Self::new()
+    }
 }
