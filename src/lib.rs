@@ -66,8 +66,8 @@
 //!
 //! # More Options
 //!
-//! Note that you can use all of these options when pluggin the mode
-//! as well.
+//! Note: The following options can be used when plugging the mode as
+//! well.
 //!
 //! ```rust
 //! # setup_duat!(setup);
@@ -102,6 +102,14 @@
 //! be filtered out, until there is only one label left, at which
 //! point it will be selected and you'll return to the [default mode].
 //!
+//! # Forms
+//!
+//! When plugging [`Sneak`] this crate sets two [`Form`]s:
+//!
+//! - `"sneak.match"`, which is set to `"default.info"`
+//! - `"sneak.label"`, which is set to `"accent.info"`
+//!
+//! [`Mode`]: duat_core::mode::Mode
 //! [`vim-sneak`]: https://github.com/justinmk/vim-sneak
 //! [`Cargo.toml`'s `dependencies` section]: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html
 //! [map]: https://docs.rs/duat/latest/duat/prelude/map
@@ -109,7 +117,7 @@
 //! [default mode]: mode::reset
 use std::sync::{LazyLock, Mutex};
 
-use duat_core::{mode::Mode, prelude::*, text::Point};
+use duat_core::{prelude::*, text::Point};
 
 static TAGGER: LazyLock<Tagger> = Tagger::new_static();
 static CUR_TAGGER: LazyLock<Tagger> = Tagger::new_static();
@@ -186,6 +194,9 @@ impl Sneak {
 impl<U: Ui> Plugin<U> for Sneak {
     fn plug(self) {
         mode::map::<mode::User, U>("s", self);
+
+        form::set_weak("sneak.match", "default.info");
+        form::set_weak("sneak.label", "accent.info");
     }
 }
 
@@ -344,13 +355,13 @@ impl<U: Ui> Mode<U> for Sneak {
 }
 
 fn hi_labels<U: Ui>(pa: &mut Pass, handle: &Handle<File<U>, U>, matches: &Vec<[Point; 2]>) {
-    let id = form::id_of!("sneak.match");
     handle.write_text(pa, |text| {
-        for (label, &[p0, p1]) in iter_labels(matches.len()).zip(matches) {
-            text.insert_tag(*TAGGER, p0..p1, id.to_tag(50));
+        for (label, &[p0, _]) in iter_labels(matches.len()).zip(matches) {
             let ghost = Ghost(txt!("[sneak.label]{label}"));
             text.insert_tag(*TAGGER, p0, ghost);
-            text.insert_tag(*TAGGER, p0.byte()..p0.byte() + 1, Conceal);
+
+            let len = text.char_at(p0).map(|c| c.len_utf8()).unwrap_or(1);
+            text.insert_tag(*TAGGER, p0.byte()..p0.byte() + len, Conceal);
         }
     });
 }
@@ -371,9 +382,9 @@ fn hi_matches<U: Ui>(
         let (end, _) = area.end_points(file.text(), file.print_cfg());
         let caret = file.selections().get_main().unwrap().caret();
 
-        let (bytes, mut tags) = file.text_mut().bytes_and_tags();
+        let mut parts = file.text_mut().parts();
 
-        let matches: Vec<_> = bytes.search_fwd(pat, start..end).unwrap().collect();
+        let matches: Vec<_> = parts.bytes.search_fwd(pat, start..end).unwrap().collect();
 
         let id = form::id_of!("sneak.match");
 
@@ -383,7 +394,7 @@ fn hi_matches<U: Ui>(
             if p0 > caret && next.is_none() {
                 next = Some(i);
             }
-            tags.insert(tagger, p0..p1, id.to_tag(50));
+            parts.tags.insert(tagger, p0..p1, id.to_tag(50));
         }
 
         let last = matches.len().checked_sub(1);
