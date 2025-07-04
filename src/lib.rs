@@ -127,6 +127,7 @@ use duat_core::{prelude::*, text::Point};
 
 static TAGGER: LazyLock<Tagger> = Tagger::new_static();
 static CUR_TAGGER: LazyLock<Tagger> = Tagger::new_static();
+static CLOAK_TAGGER: LazyLock<Tagger> = Tagger::new_static();
 static LAST: Mutex<String> = Mutex::new(String::new());
 
 /// A [`Mode`] used for jumping to sequences of characters
@@ -350,20 +351,31 @@ impl<U: Ui> Mode<U> for Sneak {
         }
     }
 
+    fn on_switch(&mut self, pa: &mut Pass, handle: Handle<Self::Widget, U>) {
+        let id = form::id_of!("cloak");
+        handle.write_text(pa, |text| {
+            text.insert_tag(*CLOAK_TAGGER, .., id.to_tag(101))
+        })
+    }
+
     fn before_exit(&mut self, pa: &mut Pass, handle: Handle<Self::Widget, U>) {
         use Step::*;
         if let Filter(pat) | MatchedMove(pat, ..) | MatchedLabels(pat, _) = &self.step {
             *LAST.lock().unwrap() = pat.clone();
         }
 
-        handle.write_text(pa, |text| text.remove_tags([*TAGGER, *CUR_TAGGER], ..));
+        handle.write_text(pa, |text| {
+            text.remove_tags([*TAGGER, *CUR_TAGGER, *CLOAK_TAGGER], ..)
+        });
     }
 }
 
 fn hi_labels<U: Ui>(pa: &mut Pass, handle: &Handle<File<U>, U>, matches: &Vec<[Point; 2]>) {
     handle.write_text(pa, |text| {
+        text.remove_tags([*TAGGER, *CUR_TAGGER], ..);
+
         for (label, &[p0, _]) in iter_labels(matches.len()).zip(matches) {
-            let ghost = Ghost(txt!("[sneak.label]{label}"));
+            let ghost = Ghost(txt!("[sneak.label:102]{label}"));
             text.insert_tag(*TAGGER, p0, ghost);
 
             let len = text.char_at(p0).map(|c| c.len_utf8()).unwrap_or(1);
@@ -394,7 +406,7 @@ fn hi_matches<U: Ui>(
             if p0 > caret && next.is_none() {
                 next = Some(i);
             }
-            parts.tags.insert(tagger, p0..p1, id.to_tag(50));
+            parts.tags.insert(tagger, p0..p1, id.to_tag(102));
         }
 
         let last = matches.len().checked_sub(1);
@@ -407,7 +419,7 @@ fn hi_cur<U: Ui>(pa: &mut Pass, handle: &Handle<File<U>, U>, cur: [Point; 2], pr
 
     handle.write_text(pa, |text| {
         text.remove_tags(*CUR_TAGGER, prev[0]);
-        text.insert_tag(*CUR_TAGGER, cur[0]..cur[1], cur_id.to_tag(51));
+        text.insert_tag(*CUR_TAGGER, cur[0]..cur[1], cur_id.to_tag(103));
     });
 }
 
