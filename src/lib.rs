@@ -261,7 +261,7 @@ impl<U: Ui> Mode<U> for Sneak {
                 }
             }
             Step::Filter(pat) => {
-                handle.write_text(pa, |text| text.remove_tags(*TAGGER, ..));
+                handle.text_mut(pa).remove_tags(*TAGGER, ..);
 
                 let (regex, finished_filtering) = if let mode::key!(Char(c)) = key {
                     pat.push(c);
@@ -320,7 +320,7 @@ impl<U: Ui> Mode<U> for Sneak {
                 }
             }
             Step::MatchedLabels(_, matches) => {
-                handle.write_text(pa, |text| text.remove_tags(*TAGGER, ..));
+                handle.text_mut(pa).remove_tags(*TAGGER, ..);
 
                 let filtered_label = if let mode::key!(Char(c)) = key
                     && iter_labels(matches.len()).any(|label| c == label)
@@ -353,9 +353,9 @@ impl<U: Ui> Mode<U> for Sneak {
 
     fn on_switch(&mut self, pa: &mut Pass, handle: Handle<Self::Widget, U>) {
         let id = form::id_of!("cloak");
-        handle.write_text(pa, |text| {
-            text.insert_tag(*CLOAK_TAGGER, .., id.to_tag(101))
-        })
+        handle
+            .text_mut(pa)
+            .insert_tag(*CLOAK_TAGGER, .., id.to_tag(101));
     }
 
     fn before_exit(&mut self, pa: &mut Pass, handle: Handle<Self::Widget, U>) {
@@ -364,24 +364,24 @@ impl<U: Ui> Mode<U> for Sneak {
             *LAST.lock().unwrap() = pat.clone();
         }
 
-        handle.write_text(pa, |text| {
-            text.remove_tags([*TAGGER, *CUR_TAGGER, *CLOAK_TAGGER], ..)
-        });
+        handle
+            .text_mut(pa)
+            .remove_tags([*TAGGER, *CUR_TAGGER, *CLOAK_TAGGER], ..)
     }
 }
 
 fn hi_labels<U: Ui>(pa: &mut Pass, handle: &Handle<File<U>, U>, matches: &Vec<[Point; 2]>) {
-    handle.write_text(pa, |text| {
-        text.remove_tags([*TAGGER, *CUR_TAGGER], ..);
+    let text = handle.text_mut(pa);
 
-        for (label, &[p0, _]) in iter_labels(matches.len()).zip(matches) {
-            let ghost = Ghost(txt!("[sneak.label:102]{label}"));
-            text.insert_tag(*TAGGER, p0, ghost);
+    text.remove_tags([*TAGGER, *CUR_TAGGER], ..);
 
-            let len = text.char_at(p0).map(|c| c.len_utf8()).unwrap_or(1);
-            text.insert_tag(*TAGGER, p0.byte()..p0.byte() + len, Conceal);
-        }
-    });
+    for (label, &[p0, _]) in iter_labels(matches.len()).zip(matches) {
+        let ghost = Ghost(txt!("[sneak.label:102]{label}"));
+        text.insert_tag(*TAGGER, p0, ghost);
+
+        let len = text.char_at(p0).map(|c| c.len_utf8()).unwrap_or(1);
+        text.insert_tag(*TAGGER, p0.byte()..p0.byte() + len, Conceal);
+    }
 }
 
 fn hi_matches<U: Ui>(
@@ -389,38 +389,37 @@ fn hi_matches<U: Ui>(
     pat: &str,
     handle: &Handle<File<U>, U>,
 ) -> (Vec<[Point; 2]>, Option<usize>) {
-    handle.write(pa, |file, area| {
-        let (start, _) = area.start_points(file.text(), file.print_cfg());
-        let (end, _) = area.end_points(file.text(), file.print_cfg());
-        let caret = file.selections().get_main().unwrap().caret();
+    let (file, area) = handle.write_with_area(pa);
 
-        let mut parts = file.text_mut().parts();
+    let (start, _) = area.start_points(file.text(), file.print_cfg());
+    let (end, _) = area.end_points(file.text(), file.print_cfg());
+    let caret = file.selections().get_main().unwrap().caret();
 
-        let matches: Vec<_> = parts.bytes.search_fwd(pat, start..end).unwrap().collect();
+    let mut parts = file.text_mut().parts();
 
-        let id = form::id_of!("sneak.match");
+    let matches: Vec<_> = parts.bytes.search_fwd(pat, start..end).unwrap().collect();
 
-        let tagger = *TAGGER;
-        let mut next = None;
-        for (i, &[p0, p1]) in matches.iter().enumerate() {
-            if p0 > caret && next.is_none() {
-                next = Some(i);
-            }
-            parts.tags.insert(tagger, p0..p1, id.to_tag(102));
+    let id = form::id_of!("sneak.match");
+
+    let tagger = *TAGGER;
+    let mut next = None;
+    for (i, &[p0, p1]) in matches.iter().enumerate() {
+        if p0 > caret && next.is_none() {
+            next = Some(i);
         }
+        parts.tags.insert(tagger, p0..p1, id.to_tag(102));
+    }
 
-        let last = matches.len().checked_sub(1);
-        (matches, next.or(last))
-    })
+    let last = matches.len().checked_sub(1);
+    (matches, next.or(last))
 }
 
 fn hi_cur<U: Ui>(pa: &mut Pass, handle: &Handle<File<U>, U>, cur: [Point; 2], prev: [Point; 2]) {
     let cur_id = form::id_of!("sneak.current");
 
-    handle.write_text(pa, |text| {
-        text.remove_tags(*CUR_TAGGER, prev[0]);
-        text.insert_tag(*CUR_TAGGER, cur[0]..cur[1], cur_id.to_tag(103));
-    });
+    let text = handle.text_mut(pa);
+    text.remove_tags(*CUR_TAGGER, prev[0]);
+    text.insert_tag(*CUR_TAGGER, cur[0]..cur[1], cur_id.to_tag(103));
 }
 
 fn iter_labels(total: usize) -> impl Iterator<Item = char> {
