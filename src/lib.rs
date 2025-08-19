@@ -192,7 +192,7 @@ impl Sneak {
     /// This feature is disabled by default (i.e. `min_for_labels ==
     /// usize::MAX`).
     ///
-    /// [the selection keys]: Self::with_select_keys
+    /// [the selection keys]: Self::select_keys
     pub fn min_for_labels(self, min_for_labels: usize) -> Self {
         Self { min_for_labels, ..self }
     }
