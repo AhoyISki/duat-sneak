@@ -199,7 +199,7 @@ impl Sneak {
 }
 
 impl<U: Ui> Plugin<U> for Sneak {
-    fn plug(self) {
+    fn plug(self, _: &Plugins<U>) {
         mode::map::<mode::User, U>("s", self);
 
         form::set_weak("sneak.match", "default.info");
