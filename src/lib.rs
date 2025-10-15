@@ -123,7 +123,7 @@
 //! [default mode]: mode::reset
 use std::sync::{LazyLock, Mutex};
 
-use duat_core::{prelude::*, text::Point};
+use duat::{prelude::*, text::Point};
 
 static TAGGER: LazyLock<Tagger> = Tagger::new_static();
 static CUR_TAGGER: LazyLock<Tagger> = Tagger::new_static();
@@ -198,19 +198,19 @@ impl Sneak {
     }
 }
 
-impl<U: Ui> Plugin<U> for Sneak {
-    fn plug(self, _: &Plugins<U>) {
-        mode::map::<mode::User, U>("s", self);
+impl Plugin for Sneak {
+    fn plug(self, _: &Plugins) {
+        mode::map::<mode::User>("s", self);
 
         form::set_weak("sneak.match", "default.info");
         form::set_weak("sneak.label", "accent.info");
     }
 }
 
-impl<U: Ui> Mode<U> for Sneak {
-    type Widget = File<U>;
+impl Mode for Sneak {
+    type Widget = File;
 
-    fn send_key(&mut self, pa: &mut Pass, key: mode::KeyEvent, handle: Handle<File<U>, U>) {
+    fn send_key(&mut self, pa: &mut Pass, key: mode::KeyEvent, handle: Handle<File>) {
         use mode::KeyCode::*;
 
         match &mut self.step {
@@ -222,7 +222,7 @@ impl<U: Ui> Mode<U> for Sneak {
 
                     if last.is_empty() {
                         context::error!("mode hasn't been set to [a]Sneak[] yet");
-                        mode::reset::<File<U>, U>();
+                        mode::reset::<File>();
                         return;
                     } else {
                         (last.clone(), true)
@@ -234,7 +234,7 @@ impl<U: Ui> Mode<U> for Sneak {
 
                 let Some(cur) = cur else {
                     context::error!("No matches found for [a]{pat}");
-                    mode::reset::<File<U>, U>();
+                    mode::reset::<File>();
                     return;
                 };
 
@@ -244,7 +244,7 @@ impl<U: Ui> Mode<U> for Sneak {
                         let [p0, p1] = matches[0];
                         handle.edit_main(pa, |mut c| c.move_to(p0..p1));
 
-                        mode::reset::<File<U>, U>();
+                        mode::reset::<File>();
 
                         Step::MatchedMove(pat, matches, cur)
                     } else if matches.len() >= self.min_for_labels {
@@ -276,7 +276,7 @@ impl<U: Ui> Mode<U> for Sneak {
 
                 let Some(cur) = cur else {
                     context::error!("No matches found for [a]{pat}");
-                    mode::reset::<File<U>, U>();
+                    mode::reset::<File>();
                     return;
                 };
 
@@ -288,7 +288,7 @@ impl<U: Ui> Mode<U> for Sneak {
                         let [p0, p1] = matches[0];
                         handle.edit_main(pa, |mut c| c.move_to(p0..p1));
 
-                        mode::reset::<File<U>, U>();
+                        mode::reset::<File>();
 
                         Step::MatchedMove(pat.clone(), matches, cur)
                     } else if matches.len() >= self.min_for_labels {
@@ -316,7 +316,7 @@ impl<U: Ui> Mode<U> for Sneak {
                     let [p0, p1] = matches[*cur];
                     handle.edit_main(pa, |mut c| c.move_to(p0..p1));
 
-                    mode::reset::<File<U>, U>();
+                    mode::reset::<File>();
                 }
             }
             Step::MatchedLabels(_, matches) => {
@@ -332,7 +332,7 @@ impl<U: Ui> Mode<U> for Sneak {
                     } else {
                         context::error!("[a]{key.code:?}[] is not a valid label");
                     }
-                    mode::reset::<File<U>, U>();
+                    mode::reset::<File>();
                     return;
                 };
 
@@ -343,7 +343,7 @@ impl<U: Ui> Mode<U> for Sneak {
                     let [p0, p1] = matches[0];
                     handle.edit_main(pa, |mut c| c.move_to(p0..p1));
 
-                    mode::reset::<File<U>, U>();
+                    mode::reset::<File>();
                 } else {
                     hi_labels(pa, &handle, matches);
                 }
@@ -351,14 +351,14 @@ impl<U: Ui> Mode<U> for Sneak {
         }
     }
 
-    fn on_switch(&mut self, pa: &mut Pass, handle: Handle<Self::Widget, U>) {
+    fn on_switch(&mut self, pa: &mut Pass, handle: Handle<Self::Widget>) {
         let id = form::id_of!("cloak");
         handle
             .text_mut(pa)
             .insert_tag(*CLOAK_TAGGER, .., id.to_tag(101));
     }
 
-    fn before_exit(&mut self, pa: &mut Pass, handle: Handle<Self::Widget, U>) {
+    fn before_exit(&mut self, pa: &mut Pass, handle: Handle<Self::Widget>) {
         use Step::*;
         if let Filter(pat) | MatchedMove(pat, ..) | MatchedLabels(pat, _) = &self.step {
             *LAST.lock().unwrap() = pat.clone();
@@ -370,7 +370,7 @@ impl<U: Ui> Mode<U> for Sneak {
     }
 }
 
-fn hi_labels<U: Ui>(pa: &mut Pass, handle: &Handle<File<U>, U>, matches: &Vec<[Point; 2]>) {
+fn hi_labels(pa: &mut Pass, handle: &Handle<File>, matches: &Vec<[Point; 2]>) {
     let text = handle.text_mut(pa);
 
     text.remove_tags([*TAGGER, *CUR_TAGGER], ..);
@@ -384,15 +384,11 @@ fn hi_labels<U: Ui>(pa: &mut Pass, handle: &Handle<File<U>, U>, matches: &Vec<[P
     }
 }
 
-fn hi_matches<U: Ui>(
-    pa: &mut Pass,
-    pat: &str,
-    handle: &Handle<File<U>, U>,
-) -> (Vec<[Point; 2]>, Option<usize>) {
+fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle<File>) -> (Vec<[Point; 2]>, Option<usize>) {
     let (file, area) = handle.write_with_area(pa);
 
-    let (start, _) = area.start_points(file.text(), file.print_cfg());
-    let (end, _) = area.end_points(file.text(), file.print_cfg());
+    let (start, _) = area.start_points(file.text(), file.get_print_cfg());
+    let (end, _) = area.end_points(file.text(), file.get_print_cfg());
     let caret = file.selections().get_main().unwrap().caret();
 
     let mut parts = file.text_mut().parts();
@@ -414,7 +410,7 @@ fn hi_matches<U: Ui>(
     (matches, next.or(last))
 }
 
-fn hi_cur<U: Ui>(pa: &mut Pass, handle: &Handle<File<U>, U>, cur: [Point; 2], prev: [Point; 2]) {
+fn hi_cur(pa: &mut Pass, handle: &Handle<File>, cur: [Point; 2], prev: [Point; 2]) {
     let cur_id = form::id_of!("sneak.current");
 
     let text = handle.text_mut(pa);
