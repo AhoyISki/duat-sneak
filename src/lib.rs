@@ -208,9 +208,9 @@ impl Plugin for Sneak {
 }
 
 impl Mode for Sneak {
-    type Widget = File;
+    type Widget = Buffer;
 
-    fn send_key(&mut self, pa: &mut Pass, key: mode::KeyEvent, handle: Handle<File>) {
+    fn send_key(&mut self, pa: &mut Pass, key: mode::KeyEvent, handle: Handle) {
         use mode::KeyCode::*;
 
         match &mut self.step {
@@ -222,7 +222,7 @@ impl Mode for Sneak {
 
                     if last.is_empty() {
                         context::error!("mode hasn't been set to [a]Sneak[] yet");
-                        mode::reset::<File>();
+                        mode::reset::<Buffer>();
                         return;
                     } else {
                         (last.clone(), true)
@@ -234,7 +234,7 @@ impl Mode for Sneak {
 
                 let Some(cur) = cur else {
                     context::error!("No matches found for [a]{pat}");
-                    mode::reset::<File>();
+                    mode::reset::<Buffer>();
                     return;
                 };
 
@@ -244,7 +244,7 @@ impl Mode for Sneak {
                         let [p0, p1] = matches[0];
                         handle.edit_main(pa, |mut c| c.move_to(p0..p1));
 
-                        mode::reset::<File>();
+                        mode::reset::<Buffer>();
 
                         Step::MatchedMove(pat, matches, cur)
                     } else if matches.len() >= self.min_for_labels {
@@ -276,7 +276,7 @@ impl Mode for Sneak {
 
                 let Some(cur) = cur else {
                     context::error!("No matches found for [a]{pat}");
-                    mode::reset::<File>();
+                    mode::reset::<Buffer>();
                     return;
                 };
 
@@ -288,7 +288,7 @@ impl Mode for Sneak {
                         let [p0, p1] = matches[0];
                         handle.edit_main(pa, |mut c| c.move_to(p0..p1));
 
-                        mode::reset::<File>();
+                        mode::reset::<Buffer>();
 
                         Step::MatchedMove(pat.clone(), matches, cur)
                     } else if matches.len() >= self.min_for_labels {
@@ -316,7 +316,7 @@ impl Mode for Sneak {
                     let [p0, p1] = matches[*cur];
                     handle.edit_main(pa, |mut c| c.move_to(p0..p1));
 
-                    mode::reset::<File>();
+                    mode::reset::<Buffer>();
                 }
             }
             Step::MatchedLabels(_, matches) => {
@@ -332,7 +332,7 @@ impl Mode for Sneak {
                     } else {
                         context::error!("[a]{key.code:?}[] is not a valid label");
                     }
-                    mode::reset::<File>();
+                    mode::reset::<Buffer>();
                     return;
                 };
 
@@ -343,7 +343,7 @@ impl Mode for Sneak {
                     let [p0, p1] = matches[0];
                     handle.edit_main(pa, |mut c| c.move_to(p0..p1));
 
-                    mode::reset::<File>();
+                    mode::reset::<Buffer>();
                 } else {
                     hi_labels(pa, &handle, matches);
                 }
@@ -370,7 +370,7 @@ impl Mode for Sneak {
     }
 }
 
-fn hi_labels(pa: &mut Pass, handle: &Handle<File>, matches: &Vec<[Point; 2]>) {
+fn hi_labels(pa: &mut Pass, handle: &Handle, matches: &Vec<[Point; 2]>) {
     let text = handle.text_mut(pa);
 
     text.remove_tags([*TAGGER, *CUR_TAGGER], ..);
@@ -384,7 +384,7 @@ fn hi_labels(pa: &mut Pass, handle: &Handle<File>, matches: &Vec<[Point; 2]>) {
     }
 }
 
-fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle<File>) -> (Vec<[Point; 2]>, Option<usize>) {
+fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle) -> (Vec<[Point; 2]>, Option<usize>) {
     let (file, area) = handle.write_with_area(pa);
 
     let (start, _) = area.start_points(file.text(), file.get_print_cfg());
@@ -410,7 +410,7 @@ fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle<File>) -> (Vec<[Point; 2
     (matches, next.or(last))
 }
 
-fn hi_cur(pa: &mut Pass, handle: &Handle<File>, cur: [Point; 2], prev: [Point; 2]) {
+fn hi_cur(pa: &mut Pass, handle: &Handle, cur: [Point; 2], prev: [Point; 2]) {
     let cur_id = form::id_of!("sneak.current");
 
     let text = handle.text_mut(pa);
