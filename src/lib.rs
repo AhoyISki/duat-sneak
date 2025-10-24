@@ -385,13 +385,13 @@ fn hi_labels(pa: &mut Pass, handle: &Handle, matches: &Vec<[Point; 2]>) {
 }
 
 fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle) -> (Vec<[Point; 2]>, Option<usize>) {
-    let (file, area) = handle.write_with_area(pa);
+    let (buffer, area) = handle.write_with_area(pa);
 
-    let (start, _) = area.start_points(file.text(), file.get_print_cfg());
-    let (end, _) = area.end_points(file.text(), file.get_print_cfg());
-    let caret = file.selections().get_main().unwrap().caret();
+    let start = area.start_points(buffer.text(), buffer.opts).real;
+    let end = area.end_points(buffer.text(), buffer.opts).real;
+    let caret = buffer.selections().get_main().unwrap().caret();
 
-    let mut parts = file.text_mut().parts();
+    let mut parts = buffer.text_mut().parts();
 
     let matches: Vec<_> = parts.bytes.search_fwd(pat, start..end).unwrap().collect();
 
