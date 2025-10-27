@@ -121,9 +121,12 @@
 //! [map]: https://docs.rs/duat/latest/duat/prelude/map
 //! [`User`]: duat_core::mode::User
 //! [default mode]: mode::reset
-use std::sync::{LazyLock, Mutex};
+use std::{
+    ops::Range,
+    sync::{LazyLock, Mutex},
+};
 
-use duat::{prelude::*, text::Point};
+use duat::{mode::KeyMod, prelude::*, text::Point};
 
 static TAGGER: LazyLock<Tagger> = Tagger::new_static();
 static CUR_TAGGER: LazyLock<Tagger> = Tagger::new_static();
@@ -215,8 +218,8 @@ impl Mode for Sneak {
 
         match &mut self.step {
             Step::Start => {
-                let (pat, finished_filtering) = if let key!(Char(c)) = key {
-                    (c.to_string(), self.len == 1)
+                let (pat, finished_filtering) = if let event!(Char(char)) = key {
+                    (char.to_string(), self.len == 1)
                 } else {
                     let last = LAST.lock().unwrap();
 
@@ -241,8 +244,8 @@ impl Mode for Sneak {
                 self.step = if finished_filtering {
                     // Stop immediately if there is only one match
                     if matches.len() == 1 {
-                        let [p0, p1] = matches[0];
-                        handle.edit_main(pa, |mut c| c.move_to(p0..p1));
+                        let range = matches[0].clone();
+                        handle.edit_main(pa, |mut c| c.move_to(range));
 
                         mode::reset::<Buffer>();
 
@@ -252,7 +255,7 @@ impl Mode for Sneak {
 
                         Step::MatchedLabels(pat, matches)
                     } else {
-                        hi_cur(pa, &handle, matches[cur], matches[cur]);
+                        hi_cur(pa, &handle, matches[cur].clone(), matches[cur].clone());
 
                         Step::MatchedMove(pat, matches, cur)
                     }
@@ -263,8 +266,8 @@ impl Mode for Sneak {
             Step::Filter(pat) => {
                 handle.text_mut(pa).remove_tags(*TAGGER, ..);
 
-                let (regex, finished_filtering) = if let mode::key!(Char(c)) = key {
-                    pat.push(c);
+                let (regex, finished_filtering) = if let event!(Char(char)) = key {
+                    pat.push(char);
 
                     let regex = format!("{pat}[^\n]{{{}}}", self.len - pat.chars().count());
                     (regex, pat.chars().count() >= self.len)
@@ -280,13 +283,13 @@ impl Mode for Sneak {
                     return;
                 };
 
-                hi_cur(pa, &handle, matches[cur], matches[cur]);
+                hi_cur(pa, &handle, matches[cur].clone(), matches[cur].clone());
 
                 if finished_filtering {
                     // Stop immediately if there is only one match
                     self.step = if matches.len() == 1 {
-                        let [p0, p1] = matches[0];
-                        handle.edit_main(pa, |mut c| c.move_to(p0..p1));
+                        let range = matches[0].clone();
+                        handle.edit_main(pa, |mut c| c.move_to(range));
 
                         mode::reset::<Buffer>();
 
@@ -296,7 +299,7 @@ impl Mode for Sneak {
 
                         Step::MatchedLabels(pat.clone(), matches)
                     } else {
-                        hi_cur(pa, &handle, matches[cur], matches[cur]);
+                        hi_cur(pa, &handle, matches[cur].clone(), matches[cur].clone());
 
                         Step::MatchedMove(pat.clone(), matches, cur)
                     };
@@ -308,13 +311,13 @@ impl Mode for Sneak {
 
                 if key == self.next_key {
                     *cur = if *cur == last { 0 } else { *cur + 1 };
-                    hi_cur(pa, &handle, matches[*cur], matches[prev]);
+                    hi_cur(pa, &handle, matches[*cur].clone(), matches[prev].clone());
                 } else if key == self.prev_key {
                     *cur = if *cur == 0 { last } else { *cur - 1 };
-                    hi_cur(pa, &handle, matches[*cur], matches[prev]);
+                    hi_cur(pa, &handle, matches[*cur].clone(), matches[prev].clone());
                 } else {
-                    let [p0, p1] = matches[*cur];
-                    handle.edit_main(pa, |mut c| c.move_to(p0..p1));
+                    let range = matches[*cur].clone();
+                    handle.edit_main(pa, |mut c| c.move_to(range));
 
                     mode::reset::<Buffer>();
                 }
@@ -322,13 +325,13 @@ impl Mode for Sneak {
             Step::MatchedLabels(_, matches) => {
                 handle.text_mut(pa).remove_tags(*TAGGER, ..);
 
-                let filtered_label = if let mode::key!(Char(c)) = key
-                    && iter_labels(matches.len()).any(|label| c == label)
+                let filtered_label = if let event!(Char(char)) = key
+                    && iter_labels(matches.len()).any(|label| char == label)
                 {
-                    c
+                    char
                 } else {
-                    if let key!(Char(c)) = key {
-                        context::error!("[a]{c}[] is not a valid label");
+                    if let event!(Char(char)) = key {
+                        context::error!("[a]{char}[] is not a valid label");
                     } else {
                         context::error!("[a]{key.code:?}[] is not a valid label");
                     }
@@ -340,8 +343,8 @@ impl Mode for Sneak {
                 matches.retain(|_| iter.next() == Some(filtered_label));
 
                 if matches.len() == 1 {
-                    let [p0, p1] = matches[0];
-                    handle.edit_main(pa, |mut c| c.move_to(p0..p1));
+                    let range = matches[0].clone();
+                    handle.edit_main(pa, |mut c| c.move_to(range));
 
                     mode::reset::<Buffer>();
                 } else {
@@ -370,21 +373,25 @@ impl Mode for Sneak {
     }
 }
 
-fn hi_labels(pa: &mut Pass, handle: &Handle, matches: &Vec<[Point; 2]>) {
+fn hi_labels(pa: &mut Pass, handle: &Handle, matches: &Vec<Range<Point>>) {
     let text = handle.text_mut(pa);
 
     text.remove_tags([*TAGGER, *CUR_TAGGER], ..);
 
-    for (label, &[p0, _]) in iter_labels(matches.len()).zip(matches) {
+    for (label, range) in iter_labels(matches.len()).zip(matches) {
         let ghost = Ghost(txt!("[sneak.label:102]{label}"));
-        text.insert_tag(*TAGGER, p0, ghost);
+        text.insert_tag(*TAGGER, range.start, ghost);
 
-        let len = text.char_at(p0).map(|c| c.len_utf8()).unwrap_or(1);
-        text.insert_tag(*TAGGER, p0.byte()..p0.byte() + len, Conceal);
+        let len = text.char_at(range.start).map(|c| c.len_utf8()).unwrap_or(1);
+        text.insert_tag(
+            *TAGGER,
+            range.start.byte()..range.start.byte() + len,
+            Conceal,
+        );
     }
 }
 
-fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle) -> (Vec<[Point; 2]>, Option<usize>) {
+fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle) -> (Vec<Range<Point>>, Option<usize>) {
     let (buffer, area) = handle.write_with_area(pa);
 
     let start = area.start_points(buffer.text(), buffer.opts).real;
@@ -399,23 +406,23 @@ fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle) -> (Vec<[Point; 2]>, Op
 
     let tagger = *TAGGER;
     let mut next = None;
-    for (i, &[p0, p1]) in matches.iter().enumerate() {
-        if p0 > caret && next.is_none() {
+    for (i, range) in matches.iter().enumerate() {
+        if range.start > caret && next.is_none() {
             next = Some(i);
         }
-        parts.tags.insert(tagger, p0..p1, id.to_tag(102));
+        parts.tags.insert(tagger, range.clone(), id.to_tag(102));
     }
 
     let last = matches.len().checked_sub(1);
     (matches, next.or(last))
 }
 
-fn hi_cur(pa: &mut Pass, handle: &Handle, cur: [Point; 2], prev: [Point; 2]) {
+fn hi_cur(pa: &mut Pass, handle: &Handle, cur: Range<Point>, prev: Range<Point>) {
     let cur_id = form::id_of!("sneak.current");
 
     let text = handle.text_mut(pa);
-    text.remove_tags(*CUR_TAGGER, prev[0]);
-    text.insert_tag(*CUR_TAGGER, cur[0]..cur[1], cur_id.to_tag(103));
+    text.remove_tags(*CUR_TAGGER, prev.start);
+    text.insert_tag(*CUR_TAGGER, cur, cur_id.to_tag(103));
 }
 
 fn iter_labels(total: usize) -> impl Iterator<Item = char> {
@@ -439,8 +446,8 @@ fn iter_labels(total: usize) -> impl Iterator<Item = char> {
 enum Step {
     Start,
     Filter(String),
-    MatchedMove(String, Vec<[Point; 2]>, usize),
-    MatchedLabels(String, Vec<[Point; 2]>),
+    MatchedMove(String, Vec<Range<Point>>, usize),
+    MatchedLabels(String, Vec<Range<Point>>),
 }
 
 impl Default for Sneak {
