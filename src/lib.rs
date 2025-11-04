@@ -126,7 +126,7 @@ use std::{
     sync::{LazyLock, Mutex},
 };
 
-use duat::{mode::KeyMod, prelude::*, text::Point};
+use duat::{mode::KeyMod, prelude::*};
 
 static TAGGER: LazyLock<Tagger> = Tagger::new_static();
 static CUR_TAGGER: LazyLock<Tagger> = Tagger::new_static();
@@ -373,7 +373,7 @@ impl Mode for Sneak {
     }
 }
 
-fn hi_labels(pa: &mut Pass, handle: &Handle, matches: &Vec<Range<Point>>) {
+fn hi_labels(pa: &mut Pass, handle: &Handle, matches: &Vec<Range<usize>>) {
     let text = handle.text_mut(pa);
 
     text.remove_tags([*TAGGER, *CUR_TAGGER], ..);
@@ -383,20 +383,16 @@ fn hi_labels(pa: &mut Pass, handle: &Handle, matches: &Vec<Range<Point>>) {
         text.insert_tag(*TAGGER, range.start, ghost);
 
         let len = text.char_at(range.start).map(|c| c.len_utf8()).unwrap_or(1);
-        text.insert_tag(
-            *TAGGER,
-            range.start.byte()..range.start.byte() + len,
-            Conceal,
-        );
+        text.insert_tag(*TAGGER, range.start..range.start + len, Conceal);
     }
 }
 
-fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle) -> (Vec<Range<Point>>, Option<usize>) {
+fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle) -> (Vec<Range<usize>>, Option<usize>) {
     let (buffer, area) = handle.write_with_area(pa);
 
     let start = area.start_points(buffer.text(), buffer.opts).real;
     let end = area.end_points(buffer.text(), buffer.opts).real;
-    let caret = buffer.selections().get_main().unwrap().caret();
+    let caret = buffer.selections().get_main().unwrap().caret().byte();
 
     let mut parts = buffer.text_mut().parts();
 
@@ -417,7 +413,7 @@ fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle) -> (Vec<Range<Point>>, 
     (matches, next.or(last))
 }
 
-fn hi_cur(pa: &mut Pass, handle: &Handle, cur: Range<Point>, prev: Range<Point>) {
+fn hi_cur(pa: &mut Pass, handle: &Handle, cur: Range<usize>, prev: Range<usize>) {
     let cur_id = form::id_of!("sneak.current");
 
     let text = handle.text_mut(pa);
@@ -446,8 +442,8 @@ fn iter_labels(total: usize) -> impl Iterator<Item = char> {
 enum Step {
     Start,
     Filter(String),
-    MatchedMove(String, Vec<Range<Point>>, usize),
-    MatchedLabels(String, Vec<Range<Point>>),
+    MatchedMove(String, Vec<Range<usize>>, usize),
+    MatchedLabels(String, Vec<Range<usize>>),
 }
 
 impl Default for Sneak {
