@@ -1,6 +1,6 @@
-# duat-sneak ![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue) [![duat-sneak on crates.io](https://img.shields.io/crates/v/duat-sneak)](https://crates.io/crates/duat-sneak) [![duat-sneak on docs.rs](https://docs.rs/duat-sneak/badge.svg)](https://docs.rs/duat-sneak) [![Source Code Repository](https://img.shields.io/badge/Code-On%20GitHub-blue?logo=GitHub)](https://github.com/AhoyISki/duat-sneak)
+# duat-sneak ![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue) [![duat-sneak on crates.io](https://img.shields.io/crates/v/duat-sneak)](https://crates.io/crates/duat-sneak) [![duat-sneak on docs.rs](https://docs.rs/duat-sneak/badge.svg)](https://docs.rs/duat-sneak) [![Source Code Repository](https://img.shields.io/badge/Code-On%20GitHub-blue?logo=GitHub)](https://github.com/AhoyISki/duat-sneak)
 
-![sneak demonstration](./assets/sneak-demonstration.gif)
+![sneak demo](./assets/sneak-demo.gif)
 
 A `duat` [`Mode`][__link0] for searching for character sequences
 
@@ -105,17 +105,17 @@ When plugging [`Sneak`][__link12] this crate sets two [`Form`][__link13]s:
 * `"sneak.label"`, which is set to `"accent.info"`
 
 
- [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEG7OnKS_PkemFG56IpJ_QmFWVGx-ENAHaG7xgG84zvdQl8TPsYXKEG3uRJ8rCRKsGGzgzvxuuY1UmG8EKjuoYLaW6G6vQMjiIL1FIYWSEgmRGb3Jt9oNqZHVhdC1zbmVha2UwLjEuMWpkdWF0X3NuZWFrgmlkdWF0X2NvcmVlMC41LjOCZG1vZGX2
- [__link0]: https://docs.rs/duat_core/0.5.3/duat_core/?search=mode::Mode
+ [__cargo_doc2readme_dependencies_info]: ggGkYW0BYXSEGw0e-ekYvUDpG-IkxcCRsNNyG3GebtS8Np1UG6t3rXJDzMELYXKEG3uRJ8rCRKsGGzgzvxuuY1UmG8EKjuoYLaW6G6vQMjiIL1FIYWSEgmRGb3Jt9oNqZHVhdC1zbmVha2UwLjIuMWpkdWF0X3NuZWFrgmlkdWF0X2NvcmX2gmRtb2Rl9g
+ [__link0]: https://docs.rs/duat_core/latest/duat_core/?search=mode::Mode
  [__link1]: https://github.com/justinmk/vim-sneak
  [__link10]: https://docs.rs/mode/latest/mode/?search=reset
  [__link11]: https://docs.rs/mode/latest/mode/?search=reset
- [__link12]: https://docs.rs/duat-sneak/0.1.1/duat_sneak/struct.Sneak.html
+ [__link12]: https://docs.rs/duat-sneak/0.2.1/duat_sneak/struct.Sneak.html
  [__link13]: https://crates.io/crates/Form
- [__link2]: https://docs.rs/duat_core/0.5.3/duat_core/?search=mode::User
- [__link3]: https://docs.rs/duat_core/0.5.3/duat_core/?search=mode::Mode
- [__link4]: https://docs.rs/duat-sneak/0.1.1/duat_sneak/struct.Sneak.html
- [__link5]: https://docs.rs/duat-sneak/0.1.1/duat_sneak/struct.Sneak.html
+ [__link2]: https://docs.rs/duat_core/latest/duat_core/?search=mode::User
+ [__link3]: https://docs.rs/duat_core/latest/duat_core/?search=mode::Mode
+ [__link4]: https://docs.rs/duat-sneak/0.2.1/duat_sneak/struct.Sneak.html
+ [__link5]: https://docs.rs/duat-sneak/0.2.1/duat_sneak/struct.Sneak.html
  [__link6]: https://docs.rs/mode/latest/mode/?search=reset
  [__link7]: `mode::alt_is_reverse()`
  [__link8]: `mode::alt_is_reverse()`
