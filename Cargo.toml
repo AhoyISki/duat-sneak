@@ -1,6 +1,6 @@
 [package]
 name = "duat-sneak"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["AhoyISki"]
 description = "A Duat plugin for finding character sequences, inspired by vim-sneak"
 repository = "https://github.com/AhoyISki/duat-sneak"

@@ -207,6 +207,7 @@ impl Plugin for Sneak {
 
         form::set_weak("sneak.match", "default.info");
         form::set_weak("sneak.label", "accent.info");
+        form::set_weak("sneak.current", Form::underlined());
     }
 }
 
