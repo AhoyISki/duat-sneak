@@ -1,6 +1,6 @@
 # duat-sneak ![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue) [![duat-sneak on crates.io](https://img.shields.io/crates/v/duat-sneak)](https://crates.io/crates/duat-sneak) [![duat-sneak on docs.rs](https://docs.rs/duat-sneak/badge.svg)](https://docs.rs/duat-sneak) [![Source Code Repository](https://img.shields.io/badge/Code-On%20GitHub-blue?logo=GitHub)](https://github.com/AhoyISki/duat-sneak)
 
-![sneak demo](./assets/sneak-demo.gif)
+![](./assets/sneak-demo.gif)
 
 A `duat` [`Mode`][__link0] for searching for character sequences
 

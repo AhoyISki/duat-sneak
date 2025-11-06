@@ -25,14 +25,11 @@
 //! function:
 //!
 //! ```rust
-//! # use duat_core::doc_duat as duat;
-//! # use duat_sneak as sneak;
 //! setup_duat!(setup);
 //! use duat::prelude::*;
-//! use sneak::*;
 //!
 //! fn setup() {
-//!     plug!(Sneak::new());
+//!     plug(duat_sneak::Sneak::new());
 //! }
 //! ```
 //!
@@ -40,14 +37,11 @@
 //! to the [`Sneak`] mode, you can also do that manually:
 //!
 //! ```rust
-//! # use duat_core::doc_duat as duat;
-//! # use duat_sneak as sneak;
 //! setup_duat!(setup);
 //! use duat::prelude::*;
-//! use sneak::*;
 //!
 //! fn setup() {
-//!     map::<User>("s", Sneak::new());
+//!     map::<User>("s", duat_sneak::Sneak::new());
 //! }
 //! ```
 //!
@@ -76,12 +70,13 @@
 //! well.
 //!
 //! ```rust
-//! # setup_duat!(setup);
-//! # use duat_core::doc_duat::prelude::*;
-//! # use duat_sneak::*;
-//! # fn setup() {
-//! map::<User>("s", Sneak::new().select_keys(',', ';').with_len(3));
-//! # }
+//! setup_duat!(setup);
+//! use duat::prelude::*;
+//! use duat_sneak::Sneak;
+//!
+//! fn setup() {
+//!     map::<User>("s", Sneak::new().select_keys(',', ';').with_len(3));
+//! }
 //! ```
 //!
 //! Instead of switching with the regular keys, `;` selects the
@@ -94,12 +89,13 @@
 //! be tedious, so you can do the following instead:
 //!
 //! ```rust
-//! # setup_duat!(setup);
-//! # use duat_core::doc_duat::prelude::*;
-//! # use duat_sneak::*;
-//! # fn setup() {
-//! map::<User>("s", Sneak::new().min_for_labels(8));
-//! # }
+//! setup_duat!(setup);
+//! use duat::prelude::*;
+//! use duat_sneak::Sneak;
+//!
+//! fn setup() {
+//!     map::<User>("s", Sneak::new().min_for_labels(8));
+//! }
 //! ```
 //!
 //! Now, if there are 8 or more matches, instead of switching to them
