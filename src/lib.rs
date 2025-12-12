@@ -122,7 +122,11 @@ use std::{
     sync::{LazyLock, Mutex},
 };
 
-use duat::{mode::KeyMod, prelude::*};
+use duat::{
+    mode::{KeyCode::*, KeyMod},
+    prelude::*,
+    text::RegexHaystack,
+};
 
 static TAGGER: LazyLock<Tagger> = Tagger::new_static();
 static CUR_TAGGER: LazyLock<Tagger> = Tagger::new_static();
@@ -149,7 +153,7 @@ impl Sneak {
             prev_key: if mode::alt_is_reverse() {
                 KeyEvent::new(KeyCode::Char('n'), KeyMod::ALT)
             } else {
-                KeyCode::Char('N').into()
+                Char('N').into()
             },
             min_for_labels: usize::MAX,
         }
@@ -167,8 +171,8 @@ impl Sneak {
     ///   is `true`
     pub fn select_keys(self, prev: char, next: char) -> Self {
         Self {
-            prev_key: KeyCode::Char(prev).into(),
-            next_key: KeyCode::Char(next).into(),
+            prev_key: Char(prev).into(),
+            next_key: Char(next).into(),
             ..self
         }
     }
@@ -210,9 +214,13 @@ impl Plugin for Sneak {
 impl Mode for Sneak {
     type Widget = Buffer;
 
-    fn send_key(&mut self, pa: &mut Pass, key: mode::KeyEvent, handle: Handle) {
-        use mode::KeyCode::*;
+    fn bindings() -> mode::Bindings {
+        mode::bindings!(match _ {
+            event!(Char(..)) => txt!("Filter by [key.char]{{char}}"),
+        })
+    }
 
+    fn send_key(&mut self, pa: &mut Pass, key: mode::KeyEvent, handle: Handle) {
         match &mut self.step {
             Step::Start => {
                 let (pat, finished_filtering) = if let event!(Char(char)) = key {
@@ -222,7 +230,7 @@ impl Mode for Sneak {
 
                     if last.is_empty() {
                         context::error!("mode hasn't been set to [a]Sneak[] yet");
-                        mode::reset::<Buffer>();
+                        mode::reset::<Buffer>(pa);
                         return;
                     } else {
                         (last.clone(), true)
@@ -234,7 +242,7 @@ impl Mode for Sneak {
 
                 let Some(cur) = cur else {
                     context::error!("No matches found for [a]{pat}");
-                    mode::reset::<Buffer>();
+                    mode::reset::<Buffer>(pa);
                     return;
                 };
 
@@ -244,7 +252,7 @@ impl Mode for Sneak {
                         let range = matches[0].clone();
                         handle.edit_main(pa, |mut c| c.move_to(range));
 
-                        mode::reset::<Buffer>();
+                        mode::reset::<Buffer>(pa);
 
                         Step::MatchedMove(pat, matches, cur)
                     } else if matches.len() >= self.min_for_labels {
@@ -276,7 +284,7 @@ impl Mode for Sneak {
 
                 let Some(cur) = cur else {
                     context::error!("No matches found for [a]{pat}");
-                    mode::reset::<Buffer>();
+                    mode::reset::<Buffer>(pa);
                     return;
                 };
 
@@ -288,7 +296,7 @@ impl Mode for Sneak {
                         let range = matches[0].clone();
                         handle.edit_main(pa, |mut c| c.move_to(range));
 
-                        mode::reset::<Buffer>();
+                        mode::reset::<Buffer>(pa);
 
                         Step::MatchedMove(pat.clone(), matches, cur)
                     } else if matches.len() >= self.min_for_labels {
@@ -316,7 +324,7 @@ impl Mode for Sneak {
                     let range = matches[*cur].clone();
                     handle.edit_main(pa, |mut c| c.move_to(range));
 
-                    mode::reset::<Buffer>();
+                    mode::reset::<Buffer>(pa);
                 }
             }
             Step::MatchedLabels(_, matches) => {
@@ -332,7 +340,7 @@ impl Mode for Sneak {
                     } else {
                         context::error!("[a]{key.code:?}[] is not a valid label");
                     }
-                    mode::reset::<Buffer>();
+                    mode::reset::<Buffer>(pa);
                     return;
                 };
 
@@ -343,7 +351,7 @@ impl Mode for Sneak {
                     let range = matches[0].clone();
                     handle.edit_main(pa, |mut c| c.move_to(range));
 
-                    mode::reset::<Buffer>();
+                    mode::reset::<Buffer>(pa);
                 } else {
                     hi_labels(pa, &handle, matches);
                 }
@@ -376,7 +384,7 @@ fn hi_labels(pa: &mut Pass, handle: &Handle, matches: &Vec<Range<usize>>) {
     text.remove_tags([*TAGGER, *CUR_TAGGER], ..);
 
     for (label, range) in iter_labels(matches.len()).zip(matches) {
-        let ghost = Ghost(txt!("[sneak.label:102]{label}"));
+        let ghost = Ghost::new(txt!("[sneak.label:102]{label}"));
         text.insert_tag(*TAGGER, range.start, ghost);
 
         let len = text.char_at(range.start).map(|c| c.len_utf8()).unwrap_or(1);
@@ -393,7 +401,7 @@ fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle) -> (Vec<Range<usize>>, 
 
     let mut parts = buffer.text_mut().parts();
 
-    let matches: Vec<_> = parts.bytes.search_fwd(pat, start..end).unwrap().collect();
+    let matches: Vec<_> = parts.bytes.search(pat).range(start..end).collect();
 
     let id = form::id_of!("sneak.match");
 

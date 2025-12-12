@@ -11,4 +11,4 @@ categories = ["command-line-utilities", "text-editors", "config"]
 edition = "2024"
 
 [dependencies]
-duat = "0.7.1"
+duat = "0.7.7"
