@@ -125,7 +125,6 @@ use std::{
 use duat::{
     mode::{KeyCode::*, KeyMod},
     prelude::*,
-    text::RegexHaystack,
 };
 
 static TAGGER: LazyLock<Tagger> = Tagger::new_static();
