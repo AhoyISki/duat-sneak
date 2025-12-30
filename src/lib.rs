@@ -378,7 +378,7 @@ impl Mode for Sneak {
 }
 
 fn hi_labels(pa: &mut Pass, handle: &Handle, matches: &Vec<Range<usize>>) {
-    let text = handle.text_mut(pa);
+    let mut text = handle.text_mut(pa);
 
     text.remove_tags([*TAGGER, *CUR_TAGGER], ..);
 
@@ -420,7 +420,7 @@ fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle) -> (Vec<Range<usize>>, 
 fn hi_cur(pa: &mut Pass, handle: &Handle, cur: Range<usize>, prev: Range<usize>) {
     let cur_id = form::id_of!("sneak.current");
 
-    let text = handle.text_mut(pa);
+    let mut text = handle.text_mut(pa);
     text.remove_tags(*CUR_TAGGER, prev.start);
     text.insert_tag(*CUR_TAGGER, cur, cur_id.to_tag(103));
 }
