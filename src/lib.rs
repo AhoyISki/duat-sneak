@@ -111,11 +111,11 @@
 //! - `"sneak.match"`, which is set to `"default.info"`
 //! - `"sneak.label"`, which is set to `"accent.info"`
 //!
-//! [`Mode`]: duat_core::mode::Mode
+//! [`Mode`]: duat::mode::Mode
 //! [`vim-sneak`]: https://github.com/justinmk/vim-sneak
 //! [`Cargo.toml`'s `dependencies` section]: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html
 //! [map]: https://docs.rs/duat/latest/duat/prelude/map
-//! [`User`]: duat_core::mode::User
+//! [`User`]: duat::mode::User
 //! [default mode]: mode::reset
 use std::{
     ops::Range,
