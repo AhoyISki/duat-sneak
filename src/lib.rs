@@ -396,7 +396,7 @@ fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle) -> (Vec<Range<usize>>, 
 
     let start = area.start_points(buffer.text(), buffer.opts).real;
     let end = area.end_points(buffer.text(), buffer.opts).real;
-    let caret = buffer.selections().get_main().unwrap().caret().byte();
+    let caret = buffer.selections().main().caret().byte();
 
     let mut parts = buffer.text_mut().parts();
 
