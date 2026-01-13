@@ -1,6 +1,6 @@
 [package]
 name = "duat-sneak"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["AhoyISki"]
 description = "A Duat plugin for finding character sequences, inspired by vim-sneak"
 repository = "https://github.com/AhoyISki/duat-sneak"
@@ -11,4 +11,4 @@ categories = ["command-line-utilities", "text-editors", "config"]
 edition = "2024"
 
 [dependencies]
-duat = "0.7.8"
+duat = "0.8.0"
