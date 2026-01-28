@@ -371,16 +371,18 @@ impl Mode for Sneak {
             *LAST.lock().unwrap() = pat.clone();
         }
 
-        handle
-            .text_mut(pa)
-            .remove_tags([*TAGGER, *CUR_TAGGER, *CLOAK_TAGGER], ..)
+        let mut text = handle.text_mut(pa);
+        text.remove_tags(*TAGGER, ..);
+        text.remove_tags(*CUR_TAGGER, ..);
+        text.remove_tags(*CLOAK_TAGGER, ..);
     }
 }
 
 fn hi_labels(pa: &mut Pass, handle: &Handle, matches: &Vec<Range<usize>>) {
     let mut text = handle.text_mut(pa);
 
-    text.remove_tags([*TAGGER, *CUR_TAGGER], ..);
+    text.remove_tags(*TAGGER, ..);
+    text.remove_tags(*CUR_TAGGER, ..);
 
     for (label, range) in iter_labels(matches.len()).zip(matches) {
         let ghost = Ghost::new(txt!("[sneak.label:102]{label}"));
@@ -394,8 +396,8 @@ fn hi_labels(pa: &mut Pass, handle: &Handle, matches: &Vec<Range<usize>>) {
 fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle) -> (Vec<Range<usize>>, Option<usize>) {
     let (buffer, area) = handle.write_with_area(pa);
 
-    let start = area.start_points(buffer.text(), buffer.opts).real;
-    let end = area.end_points(buffer.text(), buffer.opts).real;
+    let start = area.start_points(buffer.text(), buffer.print_opts()).real;
+    let end = area.end_points(buffer.text(), buffer.print_opts()).real;
     let caret = buffer.selections().main().caret().byte();
 
     let mut parts = buffer.text_mut().parts();
