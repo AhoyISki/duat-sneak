@@ -204,9 +204,9 @@ impl Plugin for Sneak {
     fn plug(self, _: &Plugins) {
         mode::map::<mode::User>("s", self);
 
-        form::set_weak("sneak.match", "default.info");
-        form::set_weak("sneak.label", "accent.info");
-        form::set_weak("sneak.current", Form::underlined());
+        form::set_weak("sneak.match", Form::mimic("default.info"));
+        form::set_weak("sneak.label", Form::mimic("accent.info"));
+        form::set_weak("sneak.current", Form::new().underlined());
     }
 }
 
@@ -402,7 +402,7 @@ fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle) -> (Vec<Range<usize>>, 
 
     let mut parts = buffer.text_mut().parts();
 
-    let matches: Vec<_> = parts.bytes.search(pat).range(start..end).collect();
+    let matches: Vec<_> = parts.strs.search(pat).range(start..end).collect();
 
     let id = form::id_of!("sneak.match");
 
