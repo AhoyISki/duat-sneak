@@ -245,15 +245,15 @@ impl Plugin for Sneak {
 }
 
 impl Mode for Sneak {
-    type Widget = Buffer;
-
     fn bindings() -> mode::Bindings {
         mode::bindings!(match _ {
             event!(Char(..)) => txt!("Filter by [key.char]{{char}}"),
         })
     }
 
-    fn send_key(&mut self, pa: &mut Pass, key: mode::KeyEvent, handle: Handle) {
+    fn send_key(&mut self, pa: &mut Pass, key: mode::KeyEvent) {
+        let widget = context::current_widget(pa);
+
         match &mut self.step {
             Step::Start => {
                 let (pat, finished_filtering) = if let event!(Char(char)) = key {
@@ -275,7 +275,7 @@ impl Mode for Sneak {
                     "{should_ci}{pat}[^\n]{{{}}}",
                     self.len - pat.chars().count()
                 );
-                let (matches, cur) = hi_matches(pa, &regex, &handle);
+                let (matches, cur) = hi_matches(pa, &regex, &widget);
 
                 let Some(cur) = cur else {
                     context::error!("No matches found for [a]{pat}");
@@ -287,17 +287,17 @@ impl Mode for Sneak {
                     // Stop immediately if there is only one match
                     if matches.len() == 1 {
                         let range = matches[0].clone();
-                        handle.edit_main(pa, |mut c| c.move_to(range));
+                        widget.edit_main(pa, |mut c| c.move_to(range));
 
                         mode::reset::<Buffer>(pa);
 
                         Step::MatchedMove(pat, matches, cur)
                     } else if matches.len() >= self.min_for_labels {
-                        hi_labels(pa, &handle, &matches);
+                        hi_labels(pa, &widget, &matches);
 
                         Step::MatchedLabels(pat, matches)
                     } else {
-                        hi_cur(pa, &handle, matches[cur].clone(), matches[cur].clone());
+                        hi_cur(pa, &widget, matches[cur].clone(), matches[cur].clone());
 
                         Step::MatchedMove(pat, matches, cur)
                     }
@@ -306,7 +306,7 @@ impl Mode for Sneak {
                 }
             }
             Step::Filter(pat) => {
-                handle.text_mut(pa).remove_tags(*NS, ..);
+                widget.text_mut(pa).remove_tags(*NS, ..);
 
                 let (regex, finished_filtering) = if let event!(Char(char)) = key {
                     pat.push(char);
@@ -322,7 +322,7 @@ impl Mode for Sneak {
                     (pat.clone(), true)
                 };
 
-                let (matches, cur) = hi_matches(pa, &regex, &handle);
+                let (matches, cur) = hi_matches(pa, &regex, &widget);
 
                 let Some(cur) = cur else {
                     context::error!("No matches found for [a]{pat}");
@@ -330,23 +330,23 @@ impl Mode for Sneak {
                     return;
                 };
 
-                hi_cur(pa, &handle, matches[cur].clone(), matches[cur].clone());
+                hi_cur(pa, &widget, matches[cur].clone(), matches[cur].clone());
 
                 if finished_filtering {
                     // Stop immediately if there is only one match
                     self.step = if matches.len() == 1 {
                         let range = matches[0].clone();
-                        handle.edit_main(pa, |mut c| c.move_to(range));
+                        widget.edit_main(pa, |mut c| c.move_to(range));
 
                         mode::reset::<Buffer>(pa);
 
                         Step::MatchedMove(pat.clone(), matches, cur)
                     } else if matches.len() >= self.min_for_labels {
-                        hi_labels(pa, &handle, &matches);
+                        hi_labels(pa, &widget, &matches);
 
                         Step::MatchedLabels(pat.clone(), matches)
                     } else {
-                        hi_cur(pa, &handle, matches[cur].clone(), matches[cur].clone());
+                        hi_cur(pa, &widget, matches[cur].clone(), matches[cur].clone());
 
                         Step::MatchedMove(pat.clone(), matches, cur)
                     };
@@ -358,19 +358,19 @@ impl Mode for Sneak {
 
                 if key == self.next_key {
                     *cur = if *cur == last { 0 } else { *cur + 1 };
-                    hi_cur(pa, &handle, matches[*cur].clone(), matches[prev].clone());
+                    hi_cur(pa, &widget, matches[*cur].clone(), matches[prev].clone());
                 } else if key == self.prev_key {
                     *cur = if *cur == 0 { last } else { *cur - 1 };
-                    hi_cur(pa, &handle, matches[*cur].clone(), matches[prev].clone());
+                    hi_cur(pa, &widget, matches[*cur].clone(), matches[prev].clone());
                 } else {
                     let range = matches[*cur].clone();
-                    handle.edit_main(pa, |mut c| c.move_to(range));
+                    widget.edit_main(pa, |mut c| c.move_to(range));
 
                     mode::reset::<Buffer>(pa);
                 }
             }
             Step::MatchedLabels(_, matches) => {
-                handle.text_mut(pa).remove_tags(*NS, ..);
+                widget.text_mut(pa).remove_tags(*NS, ..);
 
                 let filtered_label = if let event!(Char(char)) = key
                     && iter_labels(matches.len()).any(|label| char == label)
@@ -391,18 +391,18 @@ impl Mode for Sneak {
 
                 if matches.len() == 1 {
                     let range = matches[0].clone();
-                    handle.edit_main(pa, |mut c| c.move_to(range));
+                    widget.edit_main(pa, |mut c| c.move_to(range));
 
                     mode::reset::<Buffer>(pa);
                 } else {
-                    hi_labels(pa, &handle, matches);
+                    hi_labels(pa, &widget, matches);
                 }
             }
         }
     }
 }
 
-fn hi_labels(pa: &mut Pass, handle: &Handle, matches: &Vec<Range<usize>>) {
+fn hi_labels(pa: &mut Pass, handle: &Handle<dyn Widget>, matches: &Vec<Range<usize>>) {
     let mut text = handle.text_mut(pa);
 
     text.remove_tags(*NS, ..);
@@ -414,14 +414,15 @@ fn hi_labels(pa: &mut Pass, handle: &Handle, matches: &Vec<Range<usize>>) {
     }
 }
 
-fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle) -> (Vec<Range<usize>>, Option<usize>) {
-    let (buffer, area) = handle.write_with_area(pa);
+fn hi_matches(pa: &mut Pass, pat: &str, widget: &Handle<dyn Widget>) -> (Vec<Range<usize>>, Option<usize>) {
+    let popts = widget.read(pa).print_opts();
+    let (text, area) = pa.write_many((widget.rw_text(), widget.area()));
 
-    let start = area.start_points(buffer.text(), buffer.print_opts()).real;
-    let end = area.end_points(buffer.text(), buffer.print_opts()).real;
-    let caret = buffer.selections().main().caret().byte();
+    let start = area.start_points(&text, popts).real;
+    let end = area.end_points(&text, popts).real;
+    let cursor = text.main_sel().cursor().byte();
 
-    let mut parts = buffer.text_mut().parts();
+    let mut parts = text.parts();
 
     let matches: Vec<_> = parts.strs.search(pat).range(start..end).collect();
 
@@ -430,7 +431,7 @@ fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle) -> (Vec<Range<usize>>, 
     let ns = *NS;
     let mut next = None;
     for (i, range) in matches.iter().enumerate() {
-        if range.start > caret && next.is_none() {
+        if range.start > cursor && next.is_none() {
             next = Some(i);
         }
         parts.tags.insert(ns, range.clone(), id.to_tag(239));
@@ -440,7 +441,7 @@ fn hi_matches(pa: &mut Pass, pat: &str, handle: &Handle) -> (Vec<Range<usize>>, 
     (matches, next.or(last))
 }
 
-fn hi_cur(pa: &mut Pass, handle: &Handle, cur: Range<usize>, prev: Range<usize>) {
+fn hi_cur(pa: &mut Pass, handle: &Handle<dyn Widget>, cur: Range<usize>, prev: Range<usize>) {
     let cur_id = form::id_of!("sneak.current");
 
     let mut text = handle.text_mut(pa);
