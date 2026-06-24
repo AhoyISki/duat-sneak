@@ -247,7 +247,7 @@ impl Plugin for Sneak {
 impl Mode for Sneak {
     fn bindings() -> mode::Bindings {
         mode::bindings!(match _ {
-            event!(Char(..)) => txt!("Filter by [key.char]{{char}}"),
+            unmod!(Char(..)) => txt!("Filter by [key.char]{{char}}"),
         })
     }
 
@@ -256,7 +256,7 @@ impl Mode for Sneak {
 
         match &mut self.step {
             Step::Start => {
-                let (pat, finished_filtering) = if let event!(Char(char)) = key {
+                let (pat, finished_filtering) = if let unmod!(Char(char)) = key {
                     (char.to_string(), self.len == 1)
                 } else {
                     let last = LAST.lock().unwrap();
@@ -308,7 +308,7 @@ impl Mode for Sneak {
             Step::Filter(pat) => {
                 widget.text_mut(pa).remove_tags(*NS, ..);
 
-                let (regex, finished_filtering) = if let event!(Char(char)) = key {
+                let (regex, finished_filtering) = if let unmod!(Char(char)) = key {
                     pat.push(char);
 
                     let should_ci = if self.is_case_sensitive { "" } else { "(?i)" };
@@ -372,12 +372,12 @@ impl Mode for Sneak {
             Step::MatchedLabels(_, matches) => {
                 widget.text_mut(pa).remove_tags(*NS, ..);
 
-                let filtered_label = if let event!(Char(char)) = key
+                let filtered_label = if let unmod!(Char(char)) = key
                     && iter_labels(matches.len()).any(|label| char == label)
                 {
                     char
                 } else {
-                    if let event!(Char(char)) = key {
+                    if let unmod!(Char(char)) = key {
                         context::error!("[a]{char}[] is not a valid label");
                     } else {
                         context::error!("[a]{key.code:?}[] is not a valid label");
